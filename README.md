@@ -1,0 +1,1 @@
+# Resta-de-vectors-Metode-Paral-lelogram
