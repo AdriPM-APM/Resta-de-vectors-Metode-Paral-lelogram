@@ -1,0 +1,852 @@
+<!DOCTYPE html>
+<html lang="ca">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Generador Gràfic de Restes Vectorials amb Escala Dinàmica</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #1a2a6c, #b21f1f, #1a2a6c);
+            color: #333;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        
+        header {
+            text-align: center;
+            padding: 30px;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            margin-bottom: 30px;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.25);
+        }
+        
+        h1 {
+            color: #1a2a6c;
+            margin-bottom: 15px;
+            font-size: 2.8rem;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        
+        .description {
+            font-size: 1.2rem;
+            max-width: 900px;
+            margin: 0 auto;
+            line-height: 1.7;
+            color: #444;
+        }
+        
+        .content {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+        
+        .input-section {
+            flex: 1;
+            min-width: 350px;
+            background: rgba(255, 255, 255, 0.95);
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.18);
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .graphic-section {
+            flex: 2;
+            min-width: 650px;
+            background: rgba(255, 255, 255, 0.95);
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.18);
+            display: flex;
+            flex-direction: column;
+        }
+        
+        h2 {
+            color: #1a2a6c;
+            margin-bottom: 25px;
+            padding-bottom: 12px;
+            border-bottom: 3px solid #b21f1f;
+            font-size: 1.8rem;
+        }
+        
+        .input-group {
+            margin-bottom: 25px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 10px;
+            font-weight: 700;
+            color: #1a2a6c;
+            font-size: 1.1rem;
+        }
+        
+        input {
+            width: 100%;
+            padding: 14px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 17px;
+            transition: all 0.3s;
+            background: #f8f9fa;
+        }
+        
+        input:focus {
+            border-color: #1a2a6c;
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(26, 42, 108, 0.2);
+            background: #fff;
+        }
+        
+        .vector-row {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+        
+        .vector-row .input-group {
+            flex: 1;
+            margin-bottom: 0;
+        }
+        
+        .button-group {
+            display: flex;
+            gap: 15px;
+            margin-top: 10px;
+        }
+        
+        button {
+            background: linear-gradient(to right, #1a2a6c, #b21f1f);
+            color: white;
+            border: none;
+            padding: 16px 25px;
+            border-radius: 8px;
+            font-size: 18px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: 700;
+            flex: 1;
+            letter-spacing: 0.5px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+        
+        button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 15px rgba(0, 0, 0, 0.3);
+        }
+        
+        button:active {
+            transform: translateY(1px);
+        }
+        
+        #resetBtn {
+            background: linear-gradient(to right, #555, #888);
+        }
+        
+        .canvas-container {
+            flex-grow: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            border: 3px solid #ddd;
+            border-radius: 10px;
+            background: #f0f8ff;
+            overflow: hidden;
+            min-height: 500px;
+            position: relative;
+        }
+        
+        canvas {
+            max-width: 100%;
+            background: white;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        }
+        
+        .zoom-controls {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            z-index: 10;
+        }
+        
+        .zoom-btn {
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            background: #1a2a6c;
+            color: white;
+            font-size: 24px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            box-shadow: 0 3px 6px rgba(0, 0, 0, 0.3);
+            transition: all 0.2s;
+            border: 2px solid white;
+        }
+        
+        .zoom-btn:hover {
+            background: #b21f1f;
+            transform: scale(1.1);
+        }
+        
+        .zoom-display {
+            position: absolute;
+            top: 15px;
+            left: 15px;
+            background: rgba(26, 42, 108, 0.8);
+            color: white;
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-weight: bold;
+            z-index: 10;
+        }
+        
+        .explanation {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.18);
+            margin-bottom: 30px;
+        }
+        
+        .step {
+            margin-bottom: 25px;
+            padding: 20px;
+            border-left: 5px solid #1a2a6c;
+            background: #f0f8ff;
+            border-radius: 0 10px 10px 0;
+        }
+        
+        .step h3 {
+            color: #1a2a6c;
+            margin-bottom: 15px;
+            font-size: 1.4rem;
+        }
+        
+        .step p {
+            font-size: 1.1rem;
+            line-height: 1.7;
+        }
+        
+        .result-box {
+            background: #e8f4f8;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            font-size: 1.4rem;
+            font-weight: bold;
+            color: #1a2a6c;
+            margin-top: 25px;
+            border: 3px dashed #1a2a6c;
+        }
+        
+        .vector-notation {
+            font-family: 'Courier New', monospace;
+            background: #f0f0f0;
+            padding: 4px 10px;
+            border-radius: 6px;
+            border: 2px solid #ddd;
+            font-size: 1.2rem;
+            font-weight: bold;
+        }
+        
+        .example {
+            background: #f9f9f9;
+            padding: 20px;
+            border-radius: 10px;
+            margin-top: 25px;
+            border-left: 5px solid #b21f1f;
+        }
+        
+        .example h4 {
+            color: #b21f1f;
+            margin-bottom: 15px;
+            font-size: 1.3rem;
+        }
+        
+        .example p {
+            font-size: 1.1rem;
+            line-height: 1.7;
+            margin-bottom: 10px;
+        }
+        
+        footer {
+            text-align: center;
+            padding: 25px;
+            color: white;
+            font-size: 1.1rem;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 10px;
+            margin-top: 20px;
+        }
+        
+        @media (max-width: 1100px) {
+            .content {
+                flex-direction: column;
+            }
+            
+            .input-section, .graphic-section {
+                min-width: 100%;
+            }
+            
+            .vector-row {
+                flex-direction: column;
+                gap: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Generador Gràfic de Restes Vectorials</h1>
+            <p class="description">Aquesta eina visualitza la resta de vectors mitjançant el mètode gràfic del paral·lelogram amb sistema de zoom i escala dinàmica per a una visualització clara.</p>
+        </header>
+        
+        <div class="content">
+            <div class="input-section">
+                <h2>Configuració dels Vectors</h2>
+                
+                <div class="vector-row">
+                    <div class="input-group">
+                        <label for="vector1Label">Etiqueta del Vector 1</label>
+                        <input type="text" id="vector1Label" placeholder="Ex: a⃗" value="a⃗">
+                    </div>
+                    
+                    <div class="input-group">
+                        <label for="vector1">Components (x, y)</label>
+                        <input type="text" id="vector1" placeholder="Ex: 2, -1" value="2, -1">
+                    </div>
+                </div>
+                
+                <div class="vector-row">
+                    <div class="input-group">
+                        <label for="vector2Label">Etiqueta del Vector 2</label>
+                        <input type="text" id="vector2Label" placeholder="Ex: k⃗" value="k⃗">
+                    </div>
+                    
+                    <div class="input-group">
+                        <label for="vector2">Components (x, y)</label>
+                        <input type="text" id="vector2" placeholder="Ex: 7, -3" value="7, -3">
+                    </div>
+                </div>
+                
+                <div class="vector-row">
+                    <div class="input-group">
+                        <label for="vector3Label">Etiqueta del Vector 3 (opcional)</label>
+                        <input type="text" id="vector3Label" placeholder="Ex: j⃗" value="j⃗">
+                    </div>
+                    
+                    <div class="input-group">
+                        <label for="vector3">Components (x, y)</label>
+                        <input type="text" id="vector3" placeholder="Ex: -6, -2" value="-6, -2">
+                    </div>
+                </div>
+                
+                <div class="button-group">
+                    <button id="calculateBtn">Calcular Resta Gràfica</button>
+                    <button id="resetBtn">Reiniciar</button>
+                </div>
+                
+                <div class="example">
+                    <h4>Exemple: a⃗ - k⃗ - j⃗</h4>
+                    <p>Vectors donats:</p>
+                    <p>a⃗ = (2, -1)</p>
+                    <p>k⃗ = (7, -3)</p>
+                    <p>j⃗ = (-6, -2)</p>
+                    <p>Operació: <span class="vector-notation">a⃗ - k⃗ - j⃗</span></p>
+                    <p>Resultat analític: (2 - 7 - (-6), (-1 - (-3) - (-2)) = (1, 4)</p>
+                </div>
+            </div>
+            
+            <div class="graphic-section">
+                <h2>Visualització Gràfica amb Escala Dinàmica</h2>
+                <div class="canvas-container">
+                    <div class="zoom-display">Zoom: 100%</div>
+                    <div class="zoom-controls">
+                        <div class="zoom-btn" id="zoomIn">+</div>
+                        <div class="zoom-btn" id="zoomOut">−</div>
+                    </div>
+                    <canvas id="vectorCanvas" width="900" height="600"></canvas>
+                </div>
+            </div>
+        </div>
+        
+        <div class="explanation">
+            <h2>Explicació del Mètode del Paral·lelogram</h2>
+            
+            <div class="step">
+                <h3>Pas 1: Trobar l'oposat del vector a restar</h3>
+                <p>Per a restar un vector (per exemple, <span class="vector-notation">a⃗ - k⃗</span>), primer trobem l'oposat de <span class="vector-notation">k⃗</span>, que és <span class="vector-notation">-k⃗</span>. Aquest té la mateixa magnitud però direcció contrària.</p>
+            </div>
+            
+            <div class="step">
+                <h3>Pas 2: Aplicar el mètode del paral·lelogram</h3>
+                <p>Dibuixem els vectors <span class="vector-notation">a⃗</span> i <span class="vector-notation">-k⃗</span> des de l'origen. Des del final de <span class="vector-notation">a⃗</span>, dibuixem una línia paral·lela a <span class="vector-notation">-k⃗</span>. Des del final de <span class="vector-notation">-k⃗</span>, dibuixem una línia paral·lela a <span class="vector-notation">a⃗</span>.</p>
+            </div>
+            
+            <div class="step">
+                <h3>Pas 3: Trobar la diagonal del paral·lelogram</h3>
+                <p>El vector resultant de la resta <span class="vector-notation">a⃗ - k⃗</span> és la diagonal del paral·lelogram que va des de l'origen fins al punt on es creuen les línies paral·leles.</p>
+            </div>
+            
+            <div class="step">
+                <h3>Per a múltiples vectors</h3>
+                <p>Per a operacions amb més de dos vectors (ex: <span class="vector-notation">a⃗ - k⃗ - j⃗</span>), apliquem el mètode successivament. Primer calculem <span class="vector-notation">a⃗ - k⃗</span>, i després restem <span class="vector-notation">j⃗</span> al resultat obtingut.</p>
+            </div>
+            
+            <div id="resultContainer" class="result-box">
+                Resultat apareixerà aquí després del càlcul
+            </div>
+        </div>
+        
+        <footer>
+            <p>Eina educativa per a l'aprenentatge de vectors - Mètodes Gràfics amb Escala Dinàmica</p>
+        </footer>
+    </div>
+
+    <script>
+        // Obtenim elements del DOM
+        const canvas = document.getElementById('vectorCanvas');
+        const ctx = canvas.getContext('2d');
+        const vector1LabelInput = document.getElementById('vector1Label');
+        const vector1Input = document.getElementById('vector1');
+        const vector2LabelInput = document.getElementById('vector2Label');
+        const vector2Input = document.getElementById('vector2');
+        const vector3LabelInput = document.getElementById('vector3Label');
+        const vector3Input = document.getElementById('vector3');
+        const calculateBtn = document.getElementById('calculateBtn');
+        const resetBtn = document.getElementById('resetBtn');
+        const resultContainer = document.getElementById('resultContainer');
+        const zoomInBtn = document.getElementById('zoomIn');
+        const zoomOutBtn = document.getElementById('zoomOut');
+        const zoomDisplay = document.querySelector('.zoom-display');
+        
+        // Colors per als vectors
+        const colors = ['#1a2a6c', '#b21f1f', '#228B22', '#8A2BE2', '#FF00FF'];
+        
+        // Variables de zoom
+        let zoomLevel = 1;
+        let baseScale = 30;
+        let panX = 0;
+        let panY = 0;
+        let isDragging = false;
+        let dragStartX = 0;
+        let dragStartY = 0;
+        let maxValue = 10; // Valor màxim inicial per a l'escala
+        
+        // Estat dels vectors
+        let vectors = [];
+        
+        // Funció per calcular el valor màxim necessari per a l'escala
+        function calculateMaxValue() {
+            let max = 10;
+            
+            // Recorrem tots els vectors
+            for (const vector of vectors) {
+                max = Math.max(max, Math.abs(vector.x), Math.abs(vector.y));
+            }
+            
+            // Calculem el resultat de l'operació
+            if (vectors.length >= 2) {
+                const resultX = vectors[0].x - vectors[1].x;
+                const resultY = vectors[0].y - vectors[1].y;
+                max = Math.max(max, Math.abs(resultX), Math.abs(resultY));
+                
+                if (vectors.length >= 3) {
+                    const finalX = resultX - vectors[2].x;
+                    const finalY = resultY - vectors[2].y;
+                    max = Math.max(max, Math.abs(finalX), Math.abs(finalY));
+                }
+            }
+            
+            // Afegim un marge del 20%
+            return Math.ceil(max * 1.2);
+        }
+        
+        // Funció per dibuixar els eixos amb escala dinàmica
+        function drawAxes() {
+            const centerX = canvas.width / 2 + panX;
+            const centerY = canvas.height / 2 + panY;
+            const scale = baseScale * zoomLevel;
+            
+            // Dibuixem eixos
+            ctx.beginPath();
+            ctx.strokeStyle = '#aaa';
+            ctx.lineWidth = 2;
+            
+            // Eix X
+            ctx.moveTo(50, centerY);
+            ctx.lineTo(canvas.width - 50, centerY);
+            
+            // Eix Y
+            ctx.moveTo(centerX, canvas.height - 50);
+            ctx.lineTo(centerX, 50);
+            
+            ctx.stroke();
+            
+            // Fletxes
+            ctx.beginPath();
+            ctx.fillStyle = '#666';
+            
+            // Fletxa eix X
+            ctx.moveTo(canvas.width - 50, centerY - 7);
+            ctx.lineTo(canvas.width - 40, centerY);
+            ctx.lineTo(canvas.width - 50, centerY + 7);
+            
+            // Fletxa eix Y
+            ctx.moveTo(centerX - 7, 50);
+            ctx.lineTo(centerX, 40);
+            ctx.lineTo(centerX + 7, 50);
+            
+            ctx.fill();
+            
+            // Etiquetes eixos
+            ctx.font = 'bold ' + (18 * zoomLevel) + 'px Arial';
+            ctx.fillStyle = '#666';
+            ctx.fillText('x', canvas.width - 35, centerY - 15);
+            ctx.fillText('y', centerX + 15, 45);
+            
+            // Marques d'escala amb valors dinàmics
+            ctx.font = (14 * zoomLevel) + 'px Arial';
+            ctx.fillStyle = '#888';
+            
+            // Escala eix X - utilitzem maxValue calculada
+            for (let i = -maxValue; i <= maxValue; i++) {
+                if (i === 0) continue;
+                
+                const x = centerX + i * scale;
+                // Comprovem si el punt és dins del canvas
+                if (x < 50 || x > canvas.width - 50) continue;
+                
+                ctx.beginPath();
+                ctx.moveTo(x, centerY - 5);
+                ctx.lineTo(x, centerY + 5);
+                ctx.stroke();
+                
+                // Mostrem el número només si hi ha espai suficient
+                if (Math.abs(i) % Math.ceil(maxValue/10) === 0 || Math.abs(i) <= 10) {
+                    ctx.fillText(i, x - 5, centerY + 25);
+                }
+            }
+            
+            // Escala eix Y - utilitzem maxValue calculada
+            for (let i = -maxValue; i <= maxValue; i++) {
+                if (i === 0) continue;
+                
+                const y = centerY - i * scale;
+                // Comprovem si el punt és dins del canvas
+                if (y < 50 || y > canvas.height - 50) continue;
+                
+                ctx.beginPath();
+                ctx.moveTo(centerX - 5, y);
+                ctx.lineTo(centerX + 5, y);
+                ctx.stroke();
+                
+                // Mostrem el número només si hi ha espai suficient
+                if (Math.abs(i) % Math.ceil(maxValue/10) === 0 || Math.abs(i) <= 10) {
+                    ctx.fillText(i, centerX - 30, y + 5);
+                }
+            }
+            
+            // Origen
+            ctx.fillText('O', centerX - 25, centerY + 25);
+        }
+        
+        // Funció per dibuixar un vector
+        function drawVector(x, y, color, label, startX = 0, startY = 0) {
+            const centerX = canvas.width / 2 + panX;
+            const centerY = canvas.height / 2 + panY;
+            const scale = baseScale * zoomLevel;
+            
+            const startCanvasX = centerX + startX * scale;
+            const startCanvasY = centerY - startY * scale;
+            const endCanvasX = centerX + (startX + x) * scale;
+            const endCanvasY = centerY - (startY + y) * scale;
+            
+            // Dibuixem la línia del vector
+            ctx.beginPath();
+            ctx.moveTo(startCanvasX, startCanvasY);
+            ctx.lineTo(endCanvasX, endCanvasY);
+            ctx.strokeStyle = color;
+            ctx.lineWidth = 4 * zoomLevel;
+            ctx.stroke();
+            
+            // Dibuixem la punta de la fletxa
+            const angle = Math.atan2(endCanvasY - startCanvasY, endCanvasX - startCanvasX);
+            const arrowSize = 12 * zoomLevel;
+            
+            ctx.beginPath();
+            ctx.moveTo(endCanvasX, endCanvasY);
+            ctx.lineTo(
+                endCanvasX - arrowSize * Math.cos(angle - Math.PI/6),
+                endCanvasY - arrowSize * Math.sin(angle - Math.PI/6)
+            );
+            ctx.lineTo(
+                endCanvasX - arrowSize * Math.cos(angle + Math.PI/6),
+                endCanvasY - arrowSize * Math.sin(angle + Math.PI/6)
+            );
+            ctx.closePath();
+            ctx.fillStyle = color;
+            ctx.fill();
+            
+            // Etiqueta del vector
+            const labelX = startCanvasX + (endCanvasX - startCanvasX) * 0.7;
+            const labelY = startCanvasY + (endCanvasY - startCanvasY) * 0.7 - 15;
+            
+            ctx.font = 'bold ' + (20 * zoomLevel) + 'px Arial';
+            ctx.fillStyle = color;
+            ctx.fillText(label, labelX, labelY);
+            
+            // Retornem el punt final per a vectors successius
+            return { x: startX + x, y: startY + y };
+        }
+        
+        // Funció per dibuixar el paral·lelogram
+        function drawParallelogram(u, v, color) {
+            const centerX = canvas.width / 2 + panX;
+            const centerY = canvas.height / 2 + panY;
+            const scale = baseScale * zoomLevel;
+            
+            const startX = centerX;
+            const startY = centerY;
+            const endUX = centerX + u.x * scale;
+            const endUY = centerY - u.y * scale;
+            const endVX = centerX + v.x * scale;
+            const endVY = centerY - v.y * scale;
+            const endSumX = centerX + (u.x + v.x) * scale;
+            const endSumY = centerY - (u.y + v.y) * scale;
+            
+            // Dibuixem les línies auxiliars del paral·lelogram
+            ctx.beginPath();
+            ctx.strokeStyle = color;
+            ctx.lineWidth = 2 * zoomLevel;
+            ctx.setLineDash([5, 5]);
+            
+            // Línia paral·lela a u⃗
+            ctx.moveTo(endVX, endVY);
+            ctx.lineTo(endSumX, endSumY);
+            
+            // Línia paral·lela a v⃗
+            ctx.moveTo(endUX, endUY);
+            ctx.lineTo(endSumX, endSumY);
+            
+            ctx.stroke();
+            ctx.setLineDash([]);
+        }
+        
+        // Funció per dibuixar tots els vectors
+        function drawVectors() {
+            // Netejem el canvas
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // Calculem el valor màxim per a l'escala
+            maxValue = calculateMaxValue();
+            
+            // Dibuixem eixos
+            drawAxes();
+            
+            if (vectors.length < 2) return;
+            
+            // Dibuixem el primer vector
+            const v1 = vectors[0];
+            const start1 = drawVector(v1.x, v1.y, v1.color, v1.label);
+            
+            // Dibuixem l'oposat del segon vector
+            const oppV2 = {
+                x: -vectors[1].x,
+                y: -vectors[1].y,
+                color: colors[1],
+                label: `-${vectors[1].label}`
+            };
+            const start2 = drawVector(oppV2.x, oppV2.y, oppV2.color, oppV2.label);
+            
+            // Dibuixem el paral·lelogram per al primer pas
+            drawParallelogram(
+                {x: v1.x, y: v1.y},
+                {x: oppV2.x, y: oppV2.y},
+                'rgba(0, 0, 0, 0.2)'
+            );
+            
+            // Dibuixem el vector resultant del primer pas
+            const result1 = {
+                x: v1.x + oppV2.x,
+                y: v1.y + oppV2.y
+            };
+            const start3 = drawVector(oppV2.x, oppV2.y, colors[3], `${v1.label} - ${vectors[1].label}`, v1.x, v1.y);
+            
+            // Si tenim un tercer vector
+            if (vectors.length > 2) {
+                // Dibuixem l'oposat del tercer vector
+                const oppV3 = {
+                    x: -vectors[2].x,
+                    y: -vectors[2].y,
+                    color: colors[2],
+                    label: `-${vectors[2].label}`
+                };
+                drawVector(oppV3.x, oppV3.y, oppV3.color, oppV3.label, result1.x, result1.y);
+                
+                // Dibuixem el paral·lelogram per al segon pas
+                drawParallelogram(
+                    {x: result1.x, y: result1.y},
+                    {x: oppV3.x, y: oppV3.y},
+                    'rgba(0, 0, 0, 0.2)'
+                );
+                
+                // Dibuixem el vector resultant final
+                const result2 = {
+                    x: result1.x + oppV3.x,
+                    y: result1.y + oppV3.y
+                };
+                drawVector(oppV3.x, oppV3.y, colors[4], 
+                          `${v1.label} - ${vectors[1].label} - ${vectors[2].label}`, 
+                          result1.x, result1.y);
+                
+                // Actualitzem el resultat
+                resultContainer.innerHTML = `
+                    <p>Resultat analític:</p>
+                    <p>${v1.label} - ${vectors[1].label} - ${vectors[2].label} = (${v1.x} - ${vectors[1].x} - ${vectors[2].x}, ${v1.y} - ${vectors[1].y} - ${vectors[2].y}) = (${result2.x}, ${result2.y})</p>
+                    <p>Resultat gràfic: (${result2.x}, ${result2.y})</p>
+                `;
+            } else {
+                // Actualitzem el resultat per a dos vectors
+                resultContainer.innerHTML = `
+                    <p>Resultat analític:</p>
+                    <p>${v1.label} - ${vectors[1].label} = (${v1.x} - ${vectors[1].x}, ${v1.y} - ${vectors[1].y}) = (${result1.x}, ${result1.y})</p>
+                    <p>Resultat gràfic: (${result1.x}, ${result1.y})</p>
+                `;
+            }
+        }
+        
+        // Funció per analitzar l'entrada de vectors
+        function parseVectorInput(input) {
+            const parts = input.split(',');
+            if (parts.length !== 2) return null;
+            
+            const x = parseFloat(parts[0]);
+            const y = parseFloat(parts[1]);
+            
+            if (isNaN(x) || isNaN(y)) return null;
+            
+            return { x, y };
+        }
+        
+        // Inicialitzem els vectors
+        function initializeVectors() {
+            vectors = [
+                {
+                    label: vector1LabelInput.value || "a⃗",
+                    ...parseVectorInput(vector1Input.value || "2, -1"),
+                    color: colors[0]
+                },
+                {
+                    label: vector2LabelInput.value || "k⃗",
+                    ...parseVectorInput(vector2Input.value || "7, -3"),
+                    color: colors[1]
+                }
+            ];
+            
+            if (vector3Input.value) {
+                vectors.push({
+                    label: vector3LabelInput.value || "j⃗",
+                    ...parseVectorInput(vector3Input.value || "-6, -2"),
+                    color: colors[2]
+                });
+            }
+            
+            drawVectors();
+        }
+        
+        // Funcions de zoom
+        function zoomIn() {
+            if (zoomLevel < 3) {
+                zoomLevel += 0.25;
+                updateZoom();
+            }
+        }
+        
+        function zoomOut() {
+            if (zoomLevel > 0.5) {
+                zoomLevel -= 0.25;
+                updateZoom();
+            }
+        }
+        
+        function updateZoom() {
+            zoomDisplay.textContent = `Zoom: ${Math.round(zoomLevel * 100)}%`;
+            drawVectors();
+        }
+        
+        // Funcionalitat de panning (desplaçament)
+        function handleMouseDown(e) {
+            isDragging = true;
+            dragStartX = e.clientX - panX;
+            dragStartY = e.clientY - panY;
+            canvas.style.cursor = 'grabbing';
+        }
+        
+        function handleMouseMove(e) {
+            if (isDragging) {
+                panX = e.clientX - dragStartX;
+                panY = e.clientY - dragStartY;
+                drawVectors();
+            }
+        }
+        
+        function handleMouseUp() {
+            isDragging = false;
+            canvas.style.cursor = 'default';
+        }
+        
+        // Inicialitzem el dibuix
+        initializeVectors();
+        
+        // Event listeners
+        calculateBtn.addEventListener('click', initializeVectors);
+        
+        resetBtn.addEventListener('click', () => {
+            vector1LabelInput.value = 'a⃗';
+            vector1Input.value = '2, -1';
+            vector2LabelInput.value = 'k⃗';
+            vector2Input.value = '7, -3';
+            vector3LabelInput.value = 'j⃗';
+            vector3Input.value = '-6, -2';
+            zoomLevel = 1;
+            panX = 0;
+            panY = 0;
+            updateZoom();
+            initializeVectors();
+            resultContainer.innerHTML = "Resultat apareixerà aquí després del càlcul";
+        });
+        
+        zoomInBtn.addEventListener('click', zoomIn);
+        zoomOutBtn.addEventListener('click', zoomOut);
+        
+        // Event listeners per al panning
+        canvas.addEventListener('mousedown', handleMouseDown);
+        canvas.addEventListener('mousemove', handleMouseMove);
+        canvas.addEventListener('mouseup', handleMouseUp);
+        canvas.addEventListener('mouseleave', handleMouseUp);
+    </script>
+</body>
+</html>
